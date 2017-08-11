@@ -37,16 +37,17 @@ function colonParser(data) {
 }
 
 function numParser(data) {
-  var parsedNumString = data.match(/-?\d+\.?\d*/).toString()
+  var parsedNumString = data.match(/+|-?\d+\.?[eE]?[+-]?\d*/).toString()
   var resData = data.slice(parsedNumString.length)
   return([parsedNumString, resData])
 
 }
 
 function stringParser(data) {
-  var parsedString = data.match(/[a-zA-Z]+/).toString()
+  var parsedString = data.match(/[a-zA-Z0-9:/.\\]+/).toString()
   var i = data.slice(1).search(/"/)
   var resData = data.slice(i+2)
+  console.log(parsedString);
   return([parsedString, resData])
 }
 
