@@ -1,9 +1,3 @@
-/*const fs = require('fs')
-fs.readFile('sample.json', 'utf-8', function(err, inpStr) {
-            if(err) throw err
-            console.log(inpStr)})
-*/
-
 function nullParser(data) {
   var resData = data.slice(4)
   return([null, resData])
@@ -31,28 +25,39 @@ function commaParser(data) {
 }
 
 function colonParser(data) {
-  if(data.startsWith(':'))
-  var resData = data.slice(1)
-  return resData
+  if(data.startsWith(':')) {
+    var resData = data.slice(1)
+    return resData
+  }
+}
+
+function spaceParser(data) {
+    data = data.replace(/\s/g, '')
+    //console.log(data)
+    return data
 }
 
 function numParser(data) {
-  var parsedNumString = data.match(/+|-?\d+\.?[eE]?[+-]?\d*/).toString()
-  var resData = data.slice(parsedNumString.length)
-  return([parsedNumString, resData])
-
+  //console.log(data)
+  var parsedNum = (/[+-]?\d+\.?[eE]?[+-]?\d*/).exec(data).toString()
+  //console.log(parsedNum);
+  if(parsedNum != null) {
+    var resData = data.slice(parsedNum.length)
+    return([parsedNum, resData])
+  }
 }
 
 function stringParser(data) {
-  var parsedString = data.match(/[a-zA-Z0-9:/.\\]+/).toString()
+  var parsedString = data.match(/[a-zA-Z0-9\:\/\.\-\\]+/).toString()
   var i = data.slice(1).search(/"/)
   var resData = data.slice(i+2)
-  console.log(parsedString);
+  //console.log(parsedString);
   return([parsedString, resData])
 }
 
 function arrayParser(data) {
   var parsedArray = []
+  //if()
   while(data.charAt(0) != ']') {
     var result = valueParser(data)
     parsedArray.push(result[0])
@@ -67,13 +72,16 @@ function objectParser(data) {
   var property, value, parsedObject = {}
   while(data.charAt(0) != '}') {
     var temp = valueParser(data)
+    //console.log("here",temp)
     property = temp[0]
     data = colonParser(temp[1])
     temp = valueParser(data)
     value = temp[0]
     data = commaParser(temp[1])
     parsedObject[property] = value
+    //console.log(parsedObject, data)
   }
+  //console.log(parsedObject)
   return ([parsedObject, data.slice(1)])
 }
 
@@ -81,6 +89,7 @@ function valueParser(data) {
   var resultArray = []
   if(data.charAt(0) == '{') {
     var parsedObject = objectParser(data.slice(1))
+    //console.log("after objparser");
     return parsedObject
   }
   else if(data.charAt(0) == '[') {
@@ -91,7 +100,7 @@ function valueParser(data) {
     resultArray = stringParser(data.slice(1))
     return resultArray
   }
-  else if(/[0-9]/.test(data.charAt(0))) {
+  else if(/[0-9\.+-]/.test(data.charAt(0))) {
     resultArray = numParser(data)
     return resultArray
   }
@@ -106,11 +115,19 @@ function valueParser(data) {
 
 }
 
-const readline = require('readline');
-const rl = readline.createInterface({
-  input: process.stdin
-})
+const filename = process.argv[2]
+const fs = require('fs')
+fs.readFile(filename, 'utf-8', function(err, inpStr) {
+            if(err) throw err
+            var data = spaceParser(inpStr)
+            var opObj = valueParser(data)
+            console.log(opObj[0])
+          })
+/*const readline = require('readline');
+          const rl = readline.createInterface({
+            input: process.stdin
+          })
 
-rl.on('line', (line) => {
-            valueParser(line)
-            rl.close()})
+          rl.on('line', (line) => {
+                      valueParser(line)
+                      rl.close()})*/
