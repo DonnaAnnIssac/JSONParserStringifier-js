@@ -18,6 +18,7 @@ function nullParser(data) {
 }
 
 function boolParser(data) {
+
   if(data.substr(0,4) === "true") {
     var resData = data.slice(4)
     resData = spaceParser(resData)
@@ -74,7 +75,7 @@ function stringParser(data) {
   }
   var i = data.slice(1).indexOf('"')
   var parsedString = data.slice(1,i+1).toString()
-  var resData = data.slice(i+3)
+  var resData = data.slice(i+2)
   resData = spaceParser(resData)
   return([parsedString, resData])
 }
@@ -91,7 +92,6 @@ function arrayParser(data) {
     parsedArray.push(result[0])
     data = commaParser(result[1])
     data = spaceParser(data)
-
   }
   return ([parsedArray, data.slice(1)])
 }
