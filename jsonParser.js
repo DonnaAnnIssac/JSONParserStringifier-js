@@ -1,7 +1,15 @@
+const filename = process.argv[2]
+const fs = require('fs')
+fs.readFile(filename, 'utf-8', function(err, inpStr) {
+            if(err) throw err
+            var opObj = valueParser(inpStr)
+            console.log(opObj[0])
+          })
+
 function nullParser(data) {
   if(data.substr(0,4) == 'null') {
     var resData = data.slice(4)
-    console.log("In null parser");
+    resData = spaceParser(resData)
     return([null, resData])
   }
   else {
@@ -10,15 +18,14 @@ function nullParser(data) {
 }
 
 function boolParser(data) {
-
   if(data.substr(0,4) === "true") {
     var resData = data.slice(4)
-    console.log("In bool Parser");
+    resData = spaceParser(resData)
     return([true, resData])
   }
   else if(data.substr(0,5) === "false") {
     var resData = data.slice(5)
-    console.log("In bool Parser");
+    resData = spaceParser(resData)
     return([false, resData])
   }
   else {
@@ -28,40 +35,32 @@ function boolParser(data) {
 
 function commaParser(data) {
   if(data.startsWith(',')) {
-    var resData = data.slice(1)
-    console.log("In comma parser");
-    return ([',', resData])
+    data = data.slice(1)
   }
-  else {
-    return null
-  }
+  return data
 }
 
 function colonParser(data) {
   if(data.startsWith(':')) {
-    var resData = data.slice(1)
-    console.log("In colon parser");
-    return ([':', resData])
+    data = data.slice(1)
   }
-  else {
-    return null
-  }
+  return data
 }
 
 function spaceParser(data) {
-    data = data.replace(/\s/g, '')
-    //console.log(data)
-    return data
+  if((/^(\s)+/).test(data)) {
+    data = data.replace(/^(\s)+/, '')
+  }
+  return data
 }
 
 function numParser(data) {
   var parsedNum = (/^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?/).exec(data)
   if(parsedNum) {
     parsedNum = parsedNum[0]
-    console.log(parsedNum);
     var resData = data.slice(parsedNum.length)
-    console.log(resData)
-    console.log("In number parser");
+    resData = spaceParser(resData)
+    parsedNum = parseInt(parsedNum)
     return([parsedNum, resData])
   }
   else {
@@ -73,11 +72,10 @@ function stringParser(data) {
   if (data[0] != '"') {
     return null
   }
-  var temp = data.slice(1)
-  var i = temp.indexOf('"')
-  var parsedString = data.slice(0,i+2)
+  var i = data.slice(1).indexOf('"')
+  var parsedString = data.slice(1,i+1).toString()
   var resData = data.slice(i+3)
-  console.log("In string parser");
+  resData = spaceParser(resData)
   return([parsedString, resData])
 }
 
@@ -85,18 +83,16 @@ function arrayParser(data) {
   if (data[0] != '[') {
     return null
   }
-  console.log("In array parser");
   var parsedArray = []
   data = data.slice(1)
   while(data.charAt(0) != ']') {
+    data = spaceParser(data)
     var result = valueParser(data)
     parsedArray.push(result[0])
-    console.log(parsedArray);
-    var temp = commaParser(result[1])
-    data = temp[1]
-    console.log(data);
+    data = commaParser(result[1])
+    data = spaceParser(data)
+
   }
-  //console.log(parsedArray)
   return ([parsedArray, data.slice(1)])
 }
 
@@ -104,24 +100,24 @@ function objectParser(data) {
   if (data[0] != '{') {
     return null
   }
-  console.log("In Object parser");
   var property, value, parsedObject = {}
+  data = data.slice(1)
   while(data.charAt(0) != '}') {
+    data = spaceParser(data)
     var temp = valueParser(data)
     property = temp[0]
     data = colonParser(temp[1])
+    data = spaceParser(data)
     temp = valueParser(data)
     value = temp[0]
     data = commaParser(temp[1])
+    data = spaceParser(data)
     parsedObject[property] = value
-    //console.log(parsedObject, data)
   }
-  //console.log(parsedObject)
   return ([parsedObject, data.slice(1)])
 }
 
 function valueParser(data) {
-  console.log("In value Parser")
   var resultArray = []
   if((resultArray = nullParser(data)) != null)
     return resultArray
@@ -135,14 +131,4 @@ function valueParser(data) {
     return resultArray
   else if((resultArray = objectParser(data)) != null)
     return resultArray
-  else 
-    return null
 }
-
-const filename = process.argv[2]
-const fs = require('fs')
-fs.readFile(filename, 'utf-8', function(err, inpStr) {
-            if(err) throw err
-            var opObj = valueParser(inpStr)
-            console.log(opObj[0])
-          })
