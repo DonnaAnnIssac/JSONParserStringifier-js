@@ -55,10 +55,12 @@ function spaceParser(data) {
 }
 
 function numParser(data) {
-  var parsedNum = (/[+-]?\d*\.?\d*([eE][+-]?\d*)?/).exec(data).toString()
-  //console.log(parsedNum);
+  var parsedNum = (/^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?/).exec(data)
   if(parsedNum) {
+    parsedNum = parsedNum[0]
+    console.log(parsedNum);
     var resData = data.slice(parsedNum.length)
+    console.log(resData)
     console.log("In number parser");
     return([parsedNum, resData])
   }
@@ -71,10 +73,6 @@ function stringParser(data) {
   if (data[0] != '"') {
     return null
   }
-  //var parsedString = data.match(/[a-zA-Z0-9\:\/\.\-\\]+/).toString()
-  //var i = data.slice(1).search(/"/)
-  //var resData = data.slice(i+2)
-  //console.log(parsedString);
   var temp = data.slice(1)
   var i = temp.indexOf('"')
   var parsedString = data.slice(0,i+2)
@@ -89,11 +87,14 @@ function arrayParser(data) {
   }
   console.log("In array parser");
   var parsedArray = []
+  data = data.slice(1)
   while(data.charAt(0) != ']') {
     var result = valueParser(data)
     parsedArray.push(result[0])
-    data = result[1]
-    data = commaParser(result[1])
+    console.log(parsedArray);
+    var temp = commaParser(result[1])
+    data = temp[1]
+    console.log(data);
   }
   //console.log(parsedArray)
   return ([parsedArray, data.slice(1)])
@@ -121,25 +122,27 @@ function objectParser(data) {
 
 function valueParser(data) {
   console.log("In value Parser")
-  if(nullParser(data) != null)
-    return nullParser(data)
-  else if(boolParser(data) != null)
-    return boolParser(data)
-  else if(numParser(data) != null)
-    return numParser(data)
-  else if(stringParser(data) != null)
-    return stringParser(data)
-  else if(arrayParser(data) != null)
-    return arrayParser(data)
-  else if(objectParser(data) != null)
-    return objectParser(data)
+  var resultArray = []
+  if((resultArray = nullParser(data)) != null)
+    return resultArray
+  else if((resultArray = boolParser(data)) != null)
+    return resultArray
+  else if((resultArray = numParser(data)) != null)
+    return resultArray
+  else if((resultArray = stringParser(data)) != null)
+    return resultArray
+  else if((resultArray = arrayParser(data)) != null)
+    return resultArray
+  else if((resultArray = objectParser(data)) != null)
+    return resultArray
+  else 
+    return null
 }
 
 const filename = process.argv[2]
 const fs = require('fs')
 fs.readFile(filename, 'utf-8', function(err, inpStr) {
             if(err) throw err
-            //var data = spaceParser(inpStr)
             var opObj = valueParser(inpStr)
             console.log(opObj[0])
           })
