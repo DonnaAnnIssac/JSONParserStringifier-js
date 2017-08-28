@@ -8,7 +8,7 @@ fs.readFile(filename, 'utf-8', function(err, inpStr) {
 
 function nullParser(data) {
   if(data.substr(0,4) == 'null') {
-    var resData = data.slice(4)
+    let resData = data.slice(4)
     resData = spaceParser(resData)
     return([null, resData])
   }
@@ -18,14 +18,14 @@ function nullParser(data) {
 }
 
 function boolParser(data) {
-
+  let resData = null
   if(data.substr(0,4) === "true") {
-    var resData = data.slice(4)
+    resData = data.slice(4)
     resData = spaceParser(resData)
     return([true, resData])
   }
   else if(data.substr(0,5) === "false") {
-    var resData = data.slice(5)
+    resData = data.slice(5)
     resData = spaceParser(resData)
     return([false, resData])
   }
@@ -56,10 +56,10 @@ function spaceParser(data) {
 }
 
 function numParser(data) {
-  var parsedNum = (/^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?/).exec(data)
+  let parsedNum = (/^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?/).exec(data)
   if(parsedNum) {
     parsedNum = parsedNum[0]
-    var resData = data.slice(parsedNum.length)
+    let resData = data.slice(parsedNum.length)
     resData = spaceParser(resData)
     parsedNum = parseInt(parsedNum)
     return([parsedNum, resData])
@@ -73,9 +73,9 @@ function stringParser(data) {
   if (data[0] != '"') {
     return null
   }
-  var i = data.slice(1).indexOf('"')
-  var parsedString = data.slice(1,i+1).toString()
-  var resData = data.slice(i+2)
+  let i = data.slice(1).indexOf('"')
+  let parsedString = data.slice(1,i+1).toString()
+  let resData = data.slice(i+2)
   resData = spaceParser(resData)
   return([parsedString, resData])
 }
@@ -84,11 +84,11 @@ function arrayParser(data) {
   if (data[0] != '[') {
     return null
   }
-  var parsedArray = []
+  let parsedArray = []
   data = data.slice(1)
   while(data.charAt(0) != ']') {
     data = spaceParser(data)
-    var result = valueParser(data)
+    let result = valueParser(data)
     parsedArray.push(result[0])
     data = commaParser(result[1])
     data = spaceParser(data)
@@ -100,11 +100,11 @@ function objectParser(data) {
   if (data[0] != '{') {
     return null
   }
-  var property, value, parsedObject = {}
+  let property, value, parsedObject = {}
   data = data.slice(1)
   while(data.charAt(0) != '}') {
     data = spaceParser(data)
-    var temp = valueParser(data)
+    let temp = valueParser(data)
     property = temp[0]
     data = colonParser(temp[1])
     data = spaceParser(data)
@@ -114,11 +114,12 @@ function objectParser(data) {
     data = spaceParser(data)
     parsedObject[property] = value
   }
+  console.log(parsedObject);
   return ([parsedObject, data.slice(1)])
 }
 
 function valueParser(data) {
-  var resultArray = []
+  let resultArray = []
   if((resultArray = nullParser(data)) != null)
     return resultArray
   else if((resultArray = boolParser(data)) != null)
