@@ -144,38 +144,41 @@ function valueParser(data) {
 }
 
 function convertToJsonString(input) {
-  let resultString = "{"
-  for (prop in input) {
-    let tempString = prop.toString()
-    resultString = resultString.concat(tempString)
-    //console.log(resultString);
-    resultString = resultString.concat(": ")
-    let value = input[prop]
-    if(Array.isArray(value)) { //convert array to string
-      resultString = resultString.concat("[")
-      tempString = input[prop].toString().concat("], ")
-      resultString = resultString.concat(tempString)
-    }/*
-    else if(value != null && typeof(value == 'object')) {
-      resultString = convertToJsonString(input[prop])
-      console.log(resultString);
-    }*/
-    else if(value == null) { //convert null to string
-      resultString = resultString.concat("null, ")
-    }
-    else if(Number.isFinite(value) || Number.isInteger(value) || Number.isSafeInteger(value)) {
-      resultString = resultString.concat(value).concat(", ")
-    }
-    else if(value === (true || false)) { //convert bool to string
-      resultString = resultString.concat(value).concat(", ")
-    }
-    else { //convert string to string
-    tempString = value
-    tempString = tempString.toString()
-    resultString = resultString.concat("'").concat(tempString).concat("', ")
-    }
+  let resultString = ""
+  if(input == null) { //convert null to string
+    return(resultString.concat("null"))
   }
-  resultString = resultString.concat("}")
-  console.log(resultString)
-  return resultString
+  else if(input === (true || false)) { //convert bool to string
+    return(resultString.concat(input))
+  }
+  else if(Number.isFinite(input) || Number.isInteger(input) || Number.isSafeInteger(input)) { //convert number to string
+    return(resultString.concat(input))
+  }
+  else if(typeof(input) == "string"){ //convert string to string
+    return(resultString.concat("'").concat(input).concat("'"))
+  }
+  else if (Array.isArray(input)) { //convert array to string
+    resultString = resultString.concat("[")
+    let tempString = input.reduce(function(tempString, i){
+                  tempString = (convertToJsonString(input[i]))
+                  if(i != (input.length - 1))
+                  tempString = tempString.concat(", ")
+                }, 0)
+    resultString = resultString.concat(tempString)
+    resultString = resultString.concat("]")
+    console.log(resultString)
+    return resultString
+  }
+  else {  //convert obj to string
+    resultString = resultString.concat("{")
+    for (prop in input) {
+      resultString = resultString.concat(convertToJsonString(prop))
+      resultString = resultString.concat(": ")
+      let value = input[prop]
+      resultString = resultString.concat(convertToJsonString(value)).concat(",")
+    }
+    resultString = resultString.concat("}")
+    console.log(resultString)
+    return resultString
+  }
 }
