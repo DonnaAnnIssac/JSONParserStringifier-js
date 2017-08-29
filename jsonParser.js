@@ -2,10 +2,15 @@ const filename = process.argv[2]
 const fs = require('fs')
 fs.readFile(filename, 'utf-8', function(err, inpStr) {
             if(err) throw err
-            var opObj = valueParser(inpStr)
-            console.log(opObj[0])
+            parseAndStringify(inpStr)
           })
-
+function parseAndStringify(input) {
+  const parsedResult = valueParser(input)
+  console.log("Parsed result")
+  console.log(parsedResult[0])
+  console.log("Stringified result")
+  const stringifiedResult = convertToJsonString(parsedResult[0])
+}
 const nullParser = function(data) {
   if(data.substr(0,4) == 'null') {
     let resData = data.slice(4), spaceParsedData = null
@@ -136,4 +141,41 @@ function valueParser(data) {
   let result = parserFactory(data)
   let resultArray = result[0](data)
   return resultArray
+}
+
+function convertToJsonString(input) {
+  let resultString = "{"
+  for (prop in input) {
+    let tempString = prop.toString()
+    resultString = resultString.concat(tempString)
+    //console.log(resultString);
+    resultString = resultString.concat(": ")
+    let value = input[prop]
+    if(Array.isArray(value)) { //convert array to string
+      resultString = resultString.concat("[")
+      tempString = input[prop].toString().concat("], ")
+      resultString = resultString.concat(tempString)
+    }/*
+    else if(value != null && typeof(value == 'object')) {
+      resultString = convertToJsonString(input[prop])
+      console.log(resultString);
+    }*/
+    else if(value == null) { //convert null to string
+      resultString = resultString.concat("null, ")
+    }
+    else if(Number.isFinite(value) || Number.isInteger(value) || Number.isSafeInteger(value)) {
+      resultString = resultString.concat(value).concat(", ")
+    }
+    else if(value === (true || false)) { //convert bool to string
+      resultString = resultString.concat(value).concat(", ")
+    }
+    else { //convert string to string
+    tempString = value
+    tempString = tempString.toString()
+    resultString = resultString.concat("'").concat(tempString).concat("', ")
+    }
+  }
+  resultString = resultString.concat("}")
+  console.log(resultString)
+  return resultString
 }
