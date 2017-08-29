@@ -144,19 +144,19 @@ function valueParser(data) {
 
 function stringifier(input) {
   let resultString = ""
-  if(input == null) { //convert null to string
+  if(input == null) {
     return(resultString.concat("null"))
   }
-  else if(input === (true || false)) { //convert bool to string
+  else if(input === (true || false)) {
     return(resultString.concat(input))
   }
   else if(Number.isFinite(input) || Number.isInteger(input) || Number.isSafeInteger(input)) { //convert number to string
     return(resultString.concat(input))
   }
-  else if(typeof(input) == "string"){ //convert string to string
+  else if(typeof(input) == "string"){
     return(resultString.concat("'").concat(input).concat("'"))
   }
-  else if (Array.isArray(input)) { //convert array to string
+  else if (Array.isArray(input)) {
     resultString = resultString.concat("[")
     let tempString = ""
     for( let i = 0; i < input.length; i++) {
@@ -168,17 +168,17 @@ function stringifier(input) {
     resultString = resultString.concat("]")
     return resultString
   }
-  else {  //convert obj to string
+  else {  
     resultString = resultString.concat("{")
     let keys = Object.keys(input)
-    let last = keys[keys.length-1]
+    let first = keys[0]
     for (prop in input) {
+      if(prop != first)
+          resultString = resultString.concat(", ")
       resultString = resultString.concat(stringifier(prop))
       resultString = resultString.concat(": ")
       let value = input[prop]
       resultString = resultString.concat(stringifier(value))
-      if (prop != last)
-        resultString = resultString.concat(", ")
     }
     resultString = resultString.concat("}")
     return resultString
