@@ -10,6 +10,7 @@ function parseAndStringify(input) {
   console.log(parsedResult[0])
   console.log("Stringified result")
   const stringifiedResult = convertToJsonString(parsedResult[0])
+  console.log(stringifiedResult);
 }
 const nullParser = function(data) {
   if(data.substr(0,4) == 'null') {
@@ -158,18 +159,28 @@ function convertToJsonString(input) {
     return(resultString.concat("'").concat(input).concat("'"))
   }
   else if (Array.isArray(input)) { //convert array to string
+    console.log("Hey Array");
     resultString = resultString.concat("[")
-    let tempString = input.reduce(function(tempString, i){
+    /*let tempString = input.reduce(function(tempString, i){
                   tempString = (convertToJsonString(input[i]))
+                  console.log(tempString);
                   if(i != (input.length - 1))
                   tempString = tempString.concat(", ")
-                }, 0)
+                }, 0)*/
+    let tempString = ""
+    for( let i = 0; i < input.length; i++) {
+      tempString = tempString.concat(convertToJsonString(input[i]))
+      if(i != (input.length - 1))
+        tempString = tempString.concat(", ")
+    }
+    console.log(tempString);
     resultString = resultString.concat(tempString)
     resultString = resultString.concat("]")
-    console.log(resultString)
+    //console.log(resultString)
     return resultString
   }
   else {  //convert obj to string
+    console.log("Hey Object");
     resultString = resultString.concat("{")
     for (prop in input) {
       resultString = resultString.concat(convertToJsonString(prop))
@@ -178,7 +189,7 @@ function convertToJsonString(input) {
       resultString = resultString.concat(convertToJsonString(value)).concat(",")
     }
     resultString = resultString.concat("}")
-    console.log(resultString)
+    //console.log(resultString)
     return resultString
   }
 }
