@@ -1,20 +1,11 @@
 const filename = process.argv[2]
 const fs = require('fs')
+
 fs.readFile(filename, 'utf-8', function(err, inpStr) {
             if(err) throw err
             parseAndStringify(inpStr)
           })
-function parseAndStringify(input) {
-  if(input[0] != '{' || input[0] != '[') {
-    console.log("Invalid JSON")
-    return}
-  const parsedResult = valueParser(input)
-  console.log("Parsed result")
-  console.log(parsedResult[0])
-  console.log("Stringified result")
-  const stringifiedResult = stringifier(parsedResult[0])
-  console.log(stringifiedResult);
-}
+
 const nullParser = function(data) {
   if(data.substr(0,4) == 'null') {
     let resData = data.slice(4), spaceParsedData = null
@@ -139,10 +130,21 @@ function parserFactory(data) {
                       })
   return result
 }
+
 function valueParser(data) {
   let result = parserFactory(data)
   let resultArray = result[0](data)
   return resultArray
+}
+
+function parseAndStringify(input) {
+  if(input[0] != '{' && input[0] != '[') {console.log("Invalid JSON"); return}
+  const parsedResult = valueParser(input)
+  console.log("Parsed result")
+  console.log(parsedResult[0])
+  console.log("Stringified result")
+  const stringifiedResult = stringifier(parsedResult[0])
+  console.log(stringifiedResult);
 }
 
 function stringifier(input) {
