@@ -5,6 +5,9 @@ fs.readFile(filename, 'utf-8', function(err, inpStr) {
             parseAndStringify(inpStr)
           })
 function parseAndStringify(input) {
+  if(input[0] != '{' || input[0] != '[') {
+    console.log("Invalid JSON")
+    return}
   const parsedResult = valueParser(input)
   console.log("Parsed result")
   console.log(parsedResult[0])
@@ -168,7 +171,7 @@ function stringifier(input) {
     resultString = resultString.concat("]")
     return resultString
   }
-  else {  
+  else {
     resultString = resultString.concat("{")
     let keys = Object.keys(input)
     let first = keys[0]
