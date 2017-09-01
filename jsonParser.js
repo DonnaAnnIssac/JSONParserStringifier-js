@@ -42,9 +42,9 @@ const commaParser = function(data) {
 
 const colonParser = function(data) {
   if(data.startsWith(':')) {
-    data = data.slice(1)
+    return ([':', data.replace(/[':']?/, '')])
   }
-  return data
+  return null
 }
 
 const spaceParser = function(data) {
@@ -102,7 +102,7 @@ const objectParser = function(data) {
   if (data[0] != '{') {
     return null
   }
-  let property, value, parsedObject = {}, temp = null, spaceParsedData =  null
+  let property, value, parsedObject = {}, temp = null, spaceParsedData =  null, colonParsedData = null
   data = data.slice(1)
   while(data[0] != '}') {
     if((spaceParsedData = spaceParser(data)) != null) {
@@ -110,7 +110,7 @@ const objectParser = function(data) {
     }
     else temp = valueParser(data)
     property = temp[0]
-    data = colonParser(temp[1])
+    if((colonParsedData = colonParser(temp[1])) != null) data = colonParsedData[1]
     if((spaceParsedData = spaceParser(data)) != null)
       data = spaceParsedData[1]
     temp = valueParser(data)
