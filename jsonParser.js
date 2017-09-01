@@ -8,116 +8,72 @@ fs.readFile(filename, 'utf-8', function(err, inpStr) {
 
 const nullParser = function(data) {
   if(data.substr(0,4) == 'null') {
-    let resData = data.slice(4), spaceParsedData = null
-    if((spaceParsedData = (resData)) != null)
-      return([null, spaceParsedData[1]])
-    else return ([null, resData])
+    let spaceParsedData
+    return (((spaceParsedData = spaceParser(data.slice(4))) != null) ? ([null, spaceParsedData[1]]) : ([null, data.slice(4)]))
   }
   return null
 }
 
 const boolParser = function(data) {
-  let resData = null, spaceParsedData = null
-  if(data.substr(0,4) === "true") {
-    resData = data.slice(4)
-    if((spaceParsedData = spaceParser(resData)) != null)
-      return([true, spaceParsedData[1]])
-    else return ([true, resData])
-  }
-  else if(data.substr(0,5) === "false") {
-    resData = data.slice(5)
-    if((spaceParsedData = spaceParser(resData)) != null)
-      return([false, spaceParsedData[1]])
-    else return ([false, resData])
-  }
+  let resData, spaceParsedData
+  if(data.substr(0,4) === "true")
+    return (((spaceParsedData = spaceParser(data.slice(4))) != null) ? ([true, spaceParsedData[1]]) : ([true, data.slice(4)]))
+  else if(data.substr(0,5) === "false")
+    return (((spaceParsedData = spaceParser(data.slice(5))) != null) ? ([false, spaceParsedData[1]]) : ([false, data.slice(5)]))
   return null
 }
 
-const commaParser = function(data) {
-  if(data.startsWith(',')) {
-    data = data.slice(1)
-  }
-  return data
-}
+const commaParser = function(data) {return ((data.startsWith(',')) ? ([',', data.replace(/[',']/, '')]) : null)}
 
-const colonParser = function(data) {
-  if(data.startsWith(':')) {
-    return ([':', data.replace(/[':']?/, '')])
-  }
-  return null
-}
+const colonParser = function(data) {return((data.startsWith(':')) ? ([':', data.replace(/[':']?/, '')]) : null)}
 
-const spaceParser = function(data) {
-  if((/^(\s)+/).test(data)) {
-    data = data.replace(/^(\s)+/, '')
-    return ([' ', data])
-  }
-  return null
-}
+const spaceParser = function(data) {return (((/^(\s)+/).test(data)) ? ([' ', data.replace(/^(\s)+/, '')]) : null)}
 
 const numParser = function(data) {
-  let parsedNum = (/^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?/).exec(data), spaceParsedData = null
+  let parsedNum = (/^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?/).exec(data), spaceParsedData
   if(parsedNum) {
     parsedNum = parsedNum[0]
     let resData = data.slice(parsedNum.length)
     parsedNum = parseInt(parsedNum)
-    if((spaceParsedData = spaceParser(resData)) != null)
-        return([parsedNum, spaceParsedData[1]])
-    else return ([parsedNum, resData])
+    return (((spaceParsedData = spaceParser(resData)) != null) ? ([parsedNum, spaceParsedData[1]]) : ([parsedNum, resData]))
   }
   return null
 }
 
 const stringParser = function(data) {
-  if (data[0] != '"') {
-    return null
-  }
-  let i = data.slice(1).indexOf('"'), spaceParsedData = null
-  let parsedString = data.slice(1,i+1).toString()
+  if (data[0] != '"') return null
+  let i = data.slice(1).indexOf('"'), spaceParsedData
+  let parsedString = data.slice(1,i+1)
   let resData = data.slice(i+2)
-  if((spaceParsedData = spaceParser(resData)) != null)
-    return ([parsedString, spaceParsedData[1]])
-  return([parsedString, resData])
+  return (((spaceParsedData = spaceParser(resData)) != null) ? ([parsedString, spaceParsedData[1]]) : ([parsedString, resData]))
 }
 
 const arrayParser = function(data) {
-  if (data[0] != '[') {
-    return null
-  }
-  let parsedArray = [], result = null, spaceParsedData = null
+  if (data[0] != '[') return null
+  let parsedArray = [], result, spaceParsedData, commaParsedData
   data = data.slice(1)
   while(data[0] != ']') {
-    if((spaceParsedData = spaceParser(data)) != null)
-      result = valueParser(spaceParsedData[1])
-    else result = valueParser(data)
+    result = ((spaceParsedData = spaceParser(data)) != null) ? valueParser(spaceParsedData[1]) : valueParser(data)
     parsedArray.push(result[0])
-    data = commaParser(result[1])
-    if((spaceParsedData = spaceParser(data)) != null)
-      data = spaceParsedData[1]
+    data = ((commaParsedData = commaParser(result[1])) != null) ? commaParsedData[1] : result[1]
+    data = ((spaceParsedData = spaceParser(data)) != null) ? spaceParsedData[1] : data
   }
   return ([parsedArray, data.slice(1)])
 }
 
 const objectParser = function(data) {
-  if (data[0] != '{') {
-    return null
-  }
-  let property, value, parsedObject = {}, temp = null, spaceParsedData =  null, colonParsedData = null
+  if (data[0] != '{') return null
+  let property, value, parsedObject = {}, temp, spaceParsedData, colonParsedData, commaParsedData
   data = data.slice(1)
   while(data[0] != '}') {
-    if((spaceParsedData = spaceParser(data)) != null) {
-      temp = valueParser(spaceParsedData[1])
-    }
-    else temp = valueParser(data)
+    temp = ((spaceParsedData = spaceParser(data)) != null) ? valueParser(spaceParsedData[1]) : valueParser(data)
     property = temp[0]
-    if((colonParsedData = colonParser(temp[1])) != null) data = colonParsedData[1]
-    if((spaceParsedData = spaceParser(data)) != null)
-      data = spaceParsedData[1]
+    data = ((colonParsedData = colonParser(temp[1])) != null) ? colonParsedData[1] : temp[1]
+    data = ((spaceParsedData = spaceParser(data)) != null) ? spaceParsedData[1] : data
     temp = valueParser(data)
     value = temp[0]
-    data = commaParser(temp[1])
-    if((spaceParsedData = spaceParser(data)) != null)
-      data = spaceParsedData[1]
+    data = ((commaParsedData = commaParser(temp[1])) != null) ? commaParsedData[1] : temp[1]
+    data = ((spaceParsedData = spaceParser(data)) != null) ? spaceParsedData[1] : data
     parsedObject[property] = value
   }
   return ([parsedObject, data.slice(1)])
@@ -152,7 +108,7 @@ function stringifier(input) {
   if(input == null) {
     return(resultString.concat("null"))
   }
-  else if(input === (true || false)) {
+  else if(input === true || input === false) {
     return(resultString.concat(input))
   }
   else if(Number.isFinite(input) || Number.isInteger(input) || Number.isSafeInteger(input)) { //convert number to string
@@ -166,8 +122,7 @@ function stringifier(input) {
     let tempString = ""
     for( let i = 0; i < input.length; i++) {
       tempString = tempString.concat(stringifier(input[i]))
-      if(i != (input.length - 1))
-        tempString = tempString.concat(", ")
+      tempString = (i != (input.length - 1)) ? tempString.concat(", ") : tempString
     }
     resultString = resultString.concat(tempString)
     resultString = resultString.concat("]")
@@ -178,9 +133,7 @@ function stringifier(input) {
     let keys = Object.keys(input)
     let first = keys[0]
     for (prop in input) {
-      if(prop != first)
-          resultString = resultString.concat(", ")
-      resultString = resultString.concat(stringifier(prop))
+      resultString = (prop != first) ? resultString.concat(", ") : resultString.concat(stringifier(prop))
       resultString = resultString.concat(": ")
       let value = input[prop]
       resultString = resultString.concat(stringifier(value))
