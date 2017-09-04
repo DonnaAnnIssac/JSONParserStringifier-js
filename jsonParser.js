@@ -7,10 +7,8 @@ fs.readFile(filename, 'utf-8', function(err, inpStr) {
           })
 
 const nullParser = function(data) {
-  if(data.substr(0,4) == 'null') {
-    let spaceParsedData
+  if(data.substr(0,4) == 'null')
     return (((spaceParsedData = spaceParser(data.slice(4))) != null) ? ([null, spaceParsedData[1]]) : ([null, data.slice(4)]))
-  }
   return null
 }
 
@@ -80,18 +78,16 @@ const objectParser = function(data) {
 }
 
 function parserFactory(data, parsers) {
-  let parser = parsers.filter(function(parser) {
-                        if(parser(data) !== null) return parser
-                      })
-  return parser
+  for(let i = 0; i < parsers.length; i++) {
+    let result = parsers[i](data)
+    if(result != null) return result
+  }
+  return result
 }
 
 function valueParser(data) {
-  //console.log(data);
   const parsers = [nullParser, boolParser, numParser, stringParser, arrayParser, objectParser]
-  let parser = parserFactory(data, parsers)
-  let resultArray = parser[0](data)
-  return resultArray
+  return (resultArray = parserFactory(data, parsers))
 }
 
 function parseAndStringify(input) {
