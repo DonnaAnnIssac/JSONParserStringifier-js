@@ -41,60 +41,61 @@ const numParser = function(data) {
 }
 
 const stringParser = function(data) {
-  if (data[0] != '"') return null
-  let i = data.slice(1).indexOf('"'), spaceParsedData
-  let parsedString = data.slice(1,i+1)
-  let resData = data.slice(i+2)
-  return (((spaceParsedData = spaceParser(resData)) != null) ? ([parsedString, spaceParsedData[1]]) : ([parsedString, resData]))
+  if (data[0] !== '"') return null
+  let i = data.search(/"(:|,|]|}|\n)/)
+  let parsedString = data.slice(1,i)
+  let resData = data.slice(i+1)
+  return (((spaceParsedData = spaceParser(resData)) !== null) ? ([parsedString, spaceParsedData[1]]) : ([parsedString, resData]))
 }
 
 const arrayParser = function(data) {
-  if (data[0] != '[') return null
+  if (data[0] !== '[') return null
   let parsedArray = [], result, spaceParsedData, commaParsedData
   data = data.slice(1)
-  while(data[0] != ']') {
-    result = ((spaceParsedData = spaceParser(data)) != null) ? valueParser(spaceParsedData[1]) : valueParser(data)
+  while(data[0] !== ']') {
+    result = ((spaceParsedData = spaceParser(data)) !== null) ? valueParser(spaceParsedData[1]) : valueParser(data)
     parsedArray.push(result[0])
-    data = ((commaParsedData = commaParser(result[1])) != null) ? commaParsedData[1] : result[1]
-    data = ((spaceParsedData = spaceParser(data)) != null) ? spaceParsedData[1] : data
+    data = ((commaParsedData = commaParser(result[1])) !== null) ? commaParsedData[1] : result[1]
+    data = ((spaceParsedData = spaceParser(data)) !== null) ? spaceParsedData[1] : data
   }
   return ([parsedArray, data.slice(1)])
 }
 
 const objectParser = function(data) {
-  if (data[0] != '{') return null
-  let property, value, parsedObject = {}, temp, spaceParsedData, colonParsedData, commaParsedData
+  if (data[0] !== '{') return null
   data = data.slice(1)
-  while(data[0] != '}') {
-    temp = ((spaceParsedData = spaceParser(data)) != null) ? valueParser(spaceParsedData[1]) : valueParser(data)
+  let property, value, parsedObject = {}, temp, spaceParsedData, colonParsedData, commaParsedData
+  while(data[0] !== '}') {
+    temp = ((spaceParsedData = spaceParser(data)) !== null) ? valueParser(spaceParsedData[1]) : valueParser(data)
     property = temp[0]
-    data = ((colonParsedData = colonParser(temp[1])) != null) ? colonParsedData[1] : temp[1]
-    data = ((spaceParsedData = spaceParser(data)) != null) ? spaceParsedData[1] : data
+    data = ((colonParsedData = colonParser(temp[1])) !== null) ? colonParsedData[1] : temp[1]
+    data = ((spaceParsedData = spaceParser(data)) !== null) ? spaceParsedData[1] : data
     temp = valueParser(data)
     value = temp[0]
-    data = ((commaParsedData = commaParser(temp[1])) != null) ? commaParsedData[1] : temp[1]
-    data = ((spaceParsedData = spaceParser(data)) != null) ? spaceParsedData[1] : data
+    data = ((commaParsedData = commaParser(temp[1])) !== null) ? commaParsedData[1] : temp[1]
+    data = ((spaceParsedData = spaceParser(data)) !== null) ? spaceParsedData[1] : data
     parsedObject[property] = value
   }
   return ([parsedObject, data.slice(1)])
 }
 
-function parserFactory(data) {
-  const parsers = [nullParser, boolParser, numParser, stringParser, arrayParser, objectParser]
-  let result = parsers.filter(function(parser) {
-                        if(parser(data) != null) return parser
+function parserFactory(data, parsers) {
+  let parser = parsers.filter(function(parser) {
+                        if(parser(data) !== null) return parser
                       })
-  return result
+  return parser
 }
 
 function valueParser(data) {
-  let result = parserFactory(data)
-  let resultArray = result[0](data)
+  //console.log(data);
+  const parsers = [nullParser, boolParser, numParser, stringParser, arrayParser, objectParser]
+  let parser = parserFactory(data, parsers)
+  let resultArray = parser[0](data)
   return resultArray
 }
 
 function parseAndStringify(input) {
-  if(input[0] != '{' && input[0] != '[') {console.log("Invalid JSON"); return}
+  if(input[0] !== '{' && input[0] !== '[') {console.log("Invalid JSON"); return}
   const parsedResult = valueParser(input)
   console.log("Parsed result")
   console.log(parsedResult[0])
@@ -124,21 +125,16 @@ function stringifier(input) {
       tempString = tempString.concat(stringifier(input[i]))
       tempString = (i != (input.length - 1)) ? tempString.concat(", ") : tempString
     }
-    resultString = resultString.concat(tempString)
-    resultString = resultString.concat("]")
-    return resultString
+    return (resultString.concat(tempString).concat("]"))
   }
   else {
     resultString = resultString.concat("{")
     let keys = Object.keys(input)
     let first = keys[0]
     for (prop in input) {
-      resultString = (prop != first) ? resultString.concat(", ") : resultString.concat(stringifier(prop))
-      resultString = resultString.concat(": ")
-      let value = input[prop]
-      resultString = resultString.concat(stringifier(value))
+      resultString = (prop != first) ? resultString.concat(", ").concat(stringifier(prop)).concat(": ") : resultString.concat(stringifier(prop)).concat(": ")
+      resultString = resultString.concat(stringifier(input[prop]))
     }
-    resultString = resultString.concat("}")
-    return resultString
+    return resultString.concat("}")
   }
 }
