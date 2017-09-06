@@ -32,8 +32,7 @@ const numParser = function(data) {
   if(parsedNum) {
     parsedNum = parsedNum[0]
     let resData = data.slice(parsedNum.length)
-    parsedNum = parseInt(parsedNum)
-    console.log(parsedNum);
+    parsedNum = parseFloat(parsedNum)
     return (((spaceParsedData = spaceParser(resData)) != null) ? ([parsedNum, spaceParsedData[1]]) : ([parsedNum, resData]))
   }
   return null
@@ -41,11 +40,9 @@ const numParser = function(data) {
 
 const stringParser = function(data) {
   if (data[0] !== '"') return null
-  data = data.replace(/"(\s)+/, '"')
-  let i = data.search(/"(:|,|]|}|\\n)/)
+  let i = data.replace(/"(\s)+/, '"').search(/"(:|,|]|}|\\n)/)
   let parsedString = data.slice(1,i)
   let resData = data.slice(i+1)
-  console.log(parsedString);
   return (((spaceParsedData = spaceParser(resData)) !== null) ? ([parsedString, spaceParsedData[1]]) : ([parsedString, resData]))
 }
 
@@ -60,7 +57,6 @@ const arrayParser = function(data) {
     data = ((commaParsedData = commaParser(result[1])) !== null) ? commaParsedData[1] : result[1]
     data = ((spaceParsedData = spaceParser(data)) !== null) ? spaceParsedData[1] : data
   }
-  console.log(parsedArray);
   return ([parsedArray, data.slice(1)])
 }
 
@@ -81,7 +77,6 @@ const objectParser = function(data) {
     data = ((spaceParsedData = spaceParser(data)) !== null) ? spaceParsedData[1] : data
     parsedObject[property] = value
   }
-  console.log(parsedObject);
   return ([parsedObject, data.slice(1)])
 }
 
@@ -89,7 +84,7 @@ function anyParserFactory(...parsers) {
   return function(input) {
     for(let i = 0; i < parsers.length; i++) {
       let result = parsers[i](input)
-      if(result != null) return result
+      if(result !== null) return result
     }
   return null
   }
@@ -113,19 +108,11 @@ function parseAndStringify(input) {
 
 function stringifier(input) {
   let resultString = ""
-  if(input == null) {
-    return(resultString.concat("null"))
-  }
-  else if(input === true || input === false) {
-    return(resultString.concat(input))
-  }
-  else if(Number.isFinite(input) || Number.isInteger(input) || Number.isSafeInteger(input)) { //convert number to string
-    return(resultString.concat(input))
-  }
-  else if(typeof(input) == "string"){
-    return(resultString.concat("'").concat(input).concat("'"))
-  }
-  else if (Array.isArray(input)) {
+  if(input === null) return(resultString.concat("null"))
+  if(input === true || input === false) return(resultString.concat(input))
+  if(Number.isFinite(input) || Number.isInteger(input) || Number.isSafeInteger(input)) return(resultString.concat(input))
+  if(typeof(input) === "string") return(resultString.concat("'").concat(input).concat("'"))
+  if (Array.isArray(input)) {
     resultString = resultString.concat("[")
     let tempString = ""
     for( let i = 0; i < input.length; i++) {
