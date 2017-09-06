@@ -82,7 +82,7 @@ const objectParser = function(data) {
 
 function anyParserFactory(...parsers) {
   return function(input) {
-    for(let i = 0; i < parsers.length; i++) {
+    for(let i = 0; i < parsers.length; i++){
       let result = parsers[i](input)
       if(result !== null) return result
     }
@@ -115,10 +115,10 @@ function stringifier(input) {
   if (Array.isArray(input)) {
     resultString = resultString.concat("[")
     let tempString = ""
-    for( let i = 0; i < input.length; i++) {
-      tempString = tempString.concat(stringifier(input[i]))
+    input.map(function(curr, i) {
+      tempString = tempString.concat(stringifier(curr))
       tempString = (i != (input.length - 1)) ? tempString.concat(", ") : tempString
-    }
+    })
     return (resultString.concat(tempString).concat("]"))
   }
   else {
