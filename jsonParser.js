@@ -28,11 +28,12 @@ const colonParser = function(data) {return((data.startsWith(':')) ? ([':', data.
 const spaceParser = function(data) {return (((/^(\s)+/).test(data)) ? ([' ', data.replace(/^(\s)+/, '')]) : null)}
 
 const numParser = function(data) {
-  let parsedNum = (/^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?/).exec(data), spaceParsedData
+  let parsedNum = (/^[-+]?[0-9]+(.[0-9]+([eE][-+]?[0-9]+)?)?/).exec(data), spaceParsedData
   if(parsedNum) {
     parsedNum = parsedNum[0]
     let resData = data.slice(parsedNum.length)
     parsedNum = parseInt(parsedNum)
+    console.log(parsedNum);
     return (((spaceParsedData = spaceParser(resData)) != null) ? ([parsedNum, spaceParsedData[1]]) : ([parsedNum, resData]))
   }
   return null
@@ -40,9 +41,11 @@ const numParser = function(data) {
 
 const stringParser = function(data) {
   if (data[0] !== '"') return null
-  let i = data.search(/"(:|,|]|}|\n)/)
+  data = data.replace(/"(\s)+/, '"')
+  let i = data.search(/"(:|,|]|}|\\n)/)
   let parsedString = data.slice(1,i)
   let resData = data.slice(i+1)
+  console.log(parsedString);
   return (((spaceParsedData = spaceParser(resData)) !== null) ? ([parsedString, spaceParsedData[1]]) : ([parsedString, resData]))
 }
 
@@ -52,10 +55,12 @@ const arrayParser = function(data) {
   data = data.slice(1)
   while(data[0] !== ']') {
     result = ((spaceParsedData = spaceParser(data)) !== null) ? valueParser(spaceParsedData[1]) : valueParser(data)
+    if(result == null) return result
     parsedArray.push(result[0])
     data = ((commaParsedData = commaParser(result[1])) !== null) ? commaParsedData[1] : result[1]
     data = ((spaceParsedData = spaceParser(data)) !== null) ? spaceParsedData[1] : data
   }
+  console.log(parsedArray);
   return ([parsedArray, data.slice(1)])
 }
 
@@ -65,39 +70,45 @@ const objectParser = function(data) {
   let property, value, parsedObject = {}, temp, spaceParsedData, colonParsedData, commaParsedData
   while(data[0] !== '}') {
     temp = ((spaceParsedData = spaceParser(data)) !== null) ? valueParser(spaceParsedData[1]) : valueParser(data)
+    if(temp == null) return temp
     property = temp[0]
     data = ((colonParsedData = colonParser(temp[1])) !== null) ? colonParsedData[1] : temp[1]
     data = ((spaceParsedData = spaceParser(data)) !== null) ? spaceParsedData[1] : data
     temp = valueParser(data)
+    if(temp == null) return temp
     value = temp[0]
     data = ((commaParsedData = commaParser(temp[1])) !== null) ? commaParsedData[1] : temp[1]
     data = ((spaceParsedData = spaceParser(data)) !== null) ? spaceParsedData[1] : data
     parsedObject[property] = value
   }
+  console.log(parsedObject);
   return ([parsedObject, data.slice(1)])
 }
 
-function parserFactory(data, parsers) {
-  for(let i = 0; i < parsers.length; i++) {
-    let result = parsers[i](data)
-    if(result != null) return result
+function anyParserFactory(...parsers) {
+  return function(input) {
+    for(let i = 0; i < parsers.length; i++) {
+      let result = parsers[i](input)
+      if(result != null) return result
+    }
+  return null
   }
-  return result
 }
 
-function valueParser(data) {
-  const parsers = [nullParser, boolParser, numParser, stringParser, arrayParser, objectParser]
-  return (resultArray = parserFactory(data, parsers))
-}
+const valueParser = anyParserFactory(nullParser, boolParser, numParser, stringParser, arrayParser, objectParser)
 
 function parseAndStringify(input) {
   if(input[0] !== '{' && input[0] !== '[') {console.log("Invalid JSON"); return}
   const parsedResult = valueParser(input)
   console.log("Parsed result")
-  console.log(parsedResult[0])
+  let result =(parsedResult != null) ? parsedResult[0] : "Invalid"
+  console.log(result)
   console.log("Stringified result")
+  if(parsedResult != null) {
   const stringifiedResult = stringifier(parsedResult[0])
-  console.log(stringifiedResult);
+  result = (stringifiedResult != null) ? stringifiedResult : "Invalid"
+  console.log(result)}
+  else console.log("Invalid");
 }
 
 function stringifier(input) {
